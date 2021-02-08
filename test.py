@@ -45,39 +45,56 @@ def encode_faces(img, shapes):  # 128개의 벡터 반환
     return np.array(face_descriptors)
 
 
+def np_load(npy_file):
+    np_load_old = np.load
+    np.load = lambda *a, **k: np_load_old(*a, allow_pickle=True, **k)
+    loaded_npy = np.load(npy_file)
+    loaded_npy = dict(enumerate(loaded_npy.flatten()))[0]
+    np.load = np_load_old
+
+    return loaded_npy
+
+
 if __name__ == '__main__':
     img_paths = {
         'neo': 'img/neo.jpg',
         'trinity': 'img/trinity.jpg',
         'morpheus': 'img/morpheus.jpg',
-        'smith': 'img/smith.jpg'
+        'smith': 'img/smith.jpg',
+        'jinho': 'img/jinho3.jpg'
     }
 
-    descs = {
-        'neo': None,
-        'trinity': None,
-        'morpheus': None,
-        'smith': None
-    }
+    # descs 만드는 코드임 하단은
+    # descs = {
+    #     'neo': None,
+    #     'trinity': None,
+    #     'morpheus': None,
+    #     'smith': None,
+    #     'jinho': None
+    # }
+    # print(type(descs))
 
-    for name, img_path in img_paths.items():
-        img_bgr = cv2.imread(img_path)
-        img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
+    # for name, img_path in img_paths.items():
+    #     img_bgr = cv2.imread(img_path)
+    #     img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
 
-        _, img_shapes, _ = find_faces(img_rgb)
+    #     _, img_shapes, _ = find_faces(img_rgb)
 
-        descs[name] = encode_faces(img_rgb, img_shapes)[0]  # 전체이미지와 shape을 넣는다
+    #     descs[name] = encode_faces(img_rgb, img_shapes)[0]  # 전체이미지와 shape을 넣는다
+    # print(descs)
 
-    np.save('img/descs.npy', descs)
-    print(descs)
+    # np.save('img/descs.npy', descs)
 
-    img_bgr = cv2.imread('img/alex-lacamoire.png')
+    # 얘는 기존에 존재하던 descs.npy 불러오기
+    descs = np_load('img/descs.npy')
+
+    img_bgr = cv2.imread('img/yoosung2.jpg')
     img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
 
     rects, shapes, _ = find_faces(img_rgb)
     descrtipors = encode_faces(img_rgb, shapes)
 
-    fig, ax = plt.subplots(1, figsize=(20, 20))
+    fig, ax = plt.subplots(1, figsize=(10, 10))
     ax.imshow(img_rgb)
 
     for i, desc in enumerate(descrtipors):
@@ -85,6 +102,7 @@ if __name__ == '__main__':
         found = False
 
         for name, saved_desc in descs.items():
+            # a, b 벡터 사이의 유클리드 거리 구함
             dist = np.linalg.norm([desc] - saved_desc, axis=1)
 
             if dist < 0.6:
